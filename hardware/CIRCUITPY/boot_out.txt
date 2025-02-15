@@ -1,0 +1,3 @@
+Adafruit CircuitPython 9.2.0-alpha.2351 on 2024-08-22; Adafruit PyPortal Titano with samd51j20
+Board ID:pyportal_titano
+UID:A9E26FF333533853202020351B2411FF
