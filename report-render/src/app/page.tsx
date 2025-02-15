@@ -37,116 +37,79 @@ export default function CarbonEmissionsReport() {
         </header>
 
         <div className="p-6 space-y-8">
-          <section>
-            <h2 className="text-2xl font-semibold mb-4 text-black">
-              Executive Summary
-            </h2>
-          </section>
-          <section>
-            <PieChart
-              series={[
-                {
-                  data: data
-                    ? [
-                        { id: 0, value: data.numTrash ?? 0, label: "Trash" },
-                        {
-                          id: 1,
-                          value: data.numCompost ?? 0,
-                          label: "Compose",
-                        },
-                        {
-                          id: 2,
-                          value: data.numRecycle ?? 0,
-                          label: "Recycle",
-                        },
-                      ]
-                    : [],
-                },
-              ]}
-              width={400}
-              height={200}
-            />
-          </section>
-          <section>
-            <h2 className="text-2xl font-semibold mb-4 text-black">
-              Total Emissions
+          {/* Executive Summary & Total Emissions - Combined Section */}
+          <section className="bg-white shadow-lg rounded-lg p-6">
+            <h2 className="text-2xl font-semibold mb-4 text-black text-center">
+              Executive Summary & Total Emissions
             </h2>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-6">
+              {/* Pie Chart */}
+              <div className="bg-gray-50 rounded-md p-6 shadow-md flex flex-col items-center justify-center">
+                <h3 className="text-lg font-semibold text-black mb-2">
+                  Waste Breakdown
+                </h3>
+                <PieChart
+                  series={[
+                    {
+                      data: data
+                        ? [
+                            {
+                              id: 0,
+                              value: data.numTrash ?? 0,
+                              label: "Trash",
+                            },
+                            {
+                              id: 1,
+                              value: data.numCompost ?? 0,
+                              label: "Compost",
+                            },
+                            {
+                              id: 2,
+                              value: data.numRecycle ?? 0,
+                              label: "Recycle",
+                            },
+                          ]
+                        : [],
+                    },
+                  ]}
+                  width={300}
+                  height={250}
+                />
+              </div>
+
               {/* Box for Total Emissions Number */}
-              <div className="flex flex-col items-center justify-center bg-gray-100 rounded-md p-6 gap-2">
-                <p className="text-2xl font-semibold text-black">
+              <div className="bg-gray-50 rounded-md p-6 shadow-md flex flex-col items-center justify-center">
+                <p className="text-xl font-semibold text-black">
                   Total Emissions
                 </p>
-                <span className="text-6xl font-bold text-blue-600">123.45</span>
+                <span className="text-5xl font-bold text-blue-600">123.45</span>
                 <p className="text-lg text-gray-500">Metric Tons CO2e</p>
               </div>
 
               {/* Box for Bar Chart */}
-              <div className="bg-gray-100 rounded-md p-6 flex items-center justify-center">
-                <div className="flex flex-col items-center justify-center">
-                  <BarChart
-                    xAxis={[
-                      {
-                        scaleType: "band",
-                        data: ["2020", "2021", "2022", "2023"],
-                      },
-                    ]}
-                    series={[{ data: [50, 75, 100, 125] }]}
-                    width={400}
-                    height={300}
-                  />
-                  <p className="text-sm text-gray-500 mt-2 text-center">
-                    Chart: Annual Carbon Emissions (metric tons CO2e)
-                  </p>
-                </div>
+              <div className="bg-gray-50 rounded-md p-6 shadow-md flex flex-col items-center justify-center">
+                <h3 className="text-lg font-semibold text-black mb-2">
+                  Annual Emissions
+                </h3>
+                <BarChart
+                  xAxis={[
+                    {
+                      scaleType: "band",
+                      data: ["2020", "2021", "2022", "2023"],
+                    },
+                  ]}
+                  series={[{ data: [50, 75, 100, 125] }]}
+                  width={300}
+                  height={250}
+                />
+                <p className="text-sm text-gray-500 mt-2 text-center">
+                  Annual Carbon Emissions (metric tons CO2e)
+                </p>
               </div>
             </div>
           </section>
 
-          {/* <section>
-            <h2 className="text-2xl font-semibold mb-4 text-black">
-              Emissions by Source
-            </h2>
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <div>
-                <div className="flex flex-row items-center justify-between pb-2 space-y-0">
-                  <div className="text-sm text-black font-medium">
-                    Electricity
-                  </div>
-                  <Lightbulb className="w-4 h-4 text-gray-500" />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-black">45%</div>
-                  <div className="mt-2" />
-                </div>
-              </div>
-              <div>
-                <div className="flex flex-row items-center justify-between pb-2 space-y-0">
-                  <div className="text-sm font-medium text-black">
-                    Manufacturing
-                  </div>
-                  <Factory className="w-4 h-4 text-gray-500" />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-black">30%</div>
-                  <div className="mt-2" />
-                </div>
-              </div>
-              <div>
-                <div className="flex flex-row items-center justify-between pb-2 space-y-0">
-                  <div className="text-sm font-medium text-black">
-                    Transportation
-                  </div>
-                  <Car className="w-4 h-4 text-gray-500" />
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-black">25%</div>
-                  <div className="mt-2" />
-                </div>
-              </div>
-            </div>
-          </section> */}
           {/* Compostable & Recyclable Components Section */}
           <section className="bg-gray-50 rounded-lg p-6 shadow-md">
             <h2 className="text-2xl font-semibold mb-4 text-black text-center">
