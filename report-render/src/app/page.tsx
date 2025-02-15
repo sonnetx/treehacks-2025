@@ -17,7 +17,8 @@ export default function CarbonEmissionsReport() {
       .then((res) => res.json())
       .then((data) => {
         setMessage(data.message); // ✅ Set state
-        console.log(data.message); // ✅ Log message properly
+        console.log(data.message);
+        console.log(data.data); // ✅ Log message properly
       })
       .catch((error) => console.error("Error fetching data:", error));
   }, []);
