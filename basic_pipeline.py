@@ -117,7 +117,7 @@ class TrashAnalyzer:
                         messages=[
                             {
                                 "role": "system",
-                                "content": "Parse the input and return a JSON object with a single field 'emissions_per_kg' containing just the numeric value. Remove any units or extra text."
+                                "content": "Parse the input and return a JSON object with a single field 'emissions_per_kg' containing just the numeric value. Remove any units or extra text. If there's no value in the input, use a reasonable estimate."
                             },
                             {
                                 "role": "user",
@@ -204,7 +204,8 @@ def main():
     analyzer = TrashAnalyzer(openai_api_key, perplexity_api_key)
     
     # Example usage
-    image_path = "trashbin.jpg"
+    # image_path = "trashbin.jpg"
+    image_path = "sample-images/stanfordtrash.jpg"
     report_data = analyzer.analyze_trash(image_path)
     
     print(f"Number of trash items: {report_data.numTrash}")
