@@ -1,5 +1,6 @@
 "use client";
 
+import { PieChart } from "@mui/x-charts/PieChart";
 import { BarChart, Lightbulb, Factory, Car } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -37,11 +38,7 @@ export default function CarbonEmissionsReport() {
               Executive Summary
             </h2>
             <p className="text-gray-600">
-              This report provides an overview of our organization's carbon
-              emissions for the past year. We've made significant progress in
-              reducing our carbon footprint, but there's still work to be done.
-              Our total emissions have decreased by 15% compared to the previous
-              year.
+              Your trash is looking pretty fire lowkey
             </p>
           </section>
 
@@ -51,7 +48,7 @@ export default function CarbonEmissionsReport() {
             </h2>
             <div>
               <div>
-                <div className="text-black">Total Emissions</div>
+                <div className="text-black">Total Emissions {}</div>
               </div>
               <div>
                 <div className="h-[200px] flex items-center justify-center bg-gray-100 rounded-md">
