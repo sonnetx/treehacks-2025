@@ -27,8 +27,8 @@ class TrashAnalyzer:
             encoded_image = base64.b64encode(image_bytes).decode('utf-8')
         return encoded_image
 
-    def analyze_image(self, image_path: str) -> List[str]:
-        """Analyze image using OpenAI Vision API to identify trash items."""
+    def analyze_image(self, image_path: str) -> List[Dict]:
+        """Analyze image using OpenAI Vision API to identify trash items and their estimated masses."""
         try:
             encoded_image = self.encode_image(image_path)
 
@@ -39,8 +39,8 @@ class TrashAnalyzer:
                         "role": "user",
                         "content": [
                             {
-                                "type": "text",
-                                "text": "Please identify all trash/waste items in this image and return them as a JSON list. If there are duplicate items, list each multiple times. Format: {\"items\": [\"item1\", \"item2\", ...]}"
+                                "type": "text", 
+                                "text": "Please identify all trash/waste items in this image and estimate their masses. Return as a JSON list. If there are duplicate items, list each multiple times. Format: {\"items\": [{\"name\": \"item1\", \"mass_kg\": 0.5}, {\"name\": \"item2\", \"mass_kg\": 0.3}, ...]}"
                             },
                             {
                                 "type": "image_url",
@@ -61,7 +61,7 @@ class TrashAnalyzer:
             print(f"Error analyzing image: {str(e)}")
             return []
 
-    async def get_emissions_for_item(self, session: aiohttp.ClientSession, item: str) -> Dict:
+    async def get_emissions_for_item(self, session: aiohttp.ClientSession, item: Dict) -> Dict:
         """Get carbon emissions data for a single trash item using Perplexity API."""
         headers = {
             "Authorization": f"Bearer {self.perplexity_api_key}",
@@ -77,7 +77,7 @@ class TrashAnalyzer:
                 },
                 {
                     "role": "user",
-                    "content": f"What is the carbon footprint (in CO2 equivalent) per kilogram of disposing {item} in a landfill? Return only the numeric value in kg CO2e/kg. Do not include any other text or comments or nuance. If you cannot find the information, return a reasonable estimate (only return a single number, not any explanation)"
+                    "content": f"What is the carbon footprint (in CO2 equivalent) per kilogram of disposing {item['name']} in a landfill? Return only the numeric value in kg CO2e/kg. Do not include any other text or comments or nuance. If you cannot find the information, return a reasonable estimate (only return a single number, not any explanation)"
                 }
             ],
             "max_tokens": 100,
@@ -96,28 +96,34 @@ class TrashAnalyzer:
             async with session.post(self.perplexity_url, headers=headers, json=payload) as response:
                 if response.status != 200:
                     error_text = await response.text()
-                    print(f"API Error for {item}: Status {response.status}, Response: {error_text}")
-                    return {"item": item, "emissions": None}
+                    print(f"API Error for {item['name']}: Status {response.status}, Response: {error_text}")
+                    return {"item": item['name'], "mass_kg": item['mass_kg'], "emissions_per_kg": None, "total_emissions": None}
                 
                 result = await response.json()
                 if 'choices' not in result:
-                    print(f"Unexpected API response for {item}: {result}")
-                    return {"item": item, "emissions": None}
+                    print(f"Unexpected API response for {item['name']}: {result}")
+                    return {"item": item['name'], "mass_kg": item['mass_kg'], "emissions_per_kg": None, "total_emissions": None}
                 
                 try:
                     content = result['choices'][0]['message']['content'].strip()
                     # Extract just the number from the response
-                    emissions = float(''.join(filter(lambda x: x.isdigit() or x == '.', content)))
-                    return {"item": item, "emissions": emissions}
+                    emissions_per_kg = float(''.join(filter(lambda x: x.isdigit() or x == '.', content)))
+                    total_emissions = emissions_per_kg * item['mass_kg']
+                    return {
+                        "item": item['name'], 
+                        "mass_kg": item['mass_kg'],
+                        "emissions_per_kg": emissions_per_kg,
+                        "total_emissions": total_emissions
+                    }
                 except (ValueError, KeyError) as e:
-                    print(f"Error parsing response for {item}: {content}")
-                    return {"item": item, "emissions": None}
+                    print(f"Error parsing response for {item['name']}: {content}")
+                    return {"item": item['name'], "mass_kg": item['mass_kg'], "emissions_per_kg": None, "total_emissions": None}
                     
         except Exception as e:
-            print(f"Error getting emissions for {item}: {str(e)}")
-            return {"item": item, "emissions": None}
+            print(f"Error getting emissions for {item['name']}: {str(e)}")
+            return {"item": item['name'], "mass_kg": item['mass_kg'], "emissions_per_kg": None, "total_emissions": None}
 
-    async def get_all_emissions(self, trash_items: List[str]) -> List[Dict]:
+    async def get_all_emissions(self, trash_items: List[Dict]) -> List[Dict]:
         """Get carbon emissions data for all trash items concurrently."""
         async with aiohttp.ClientSession() as session:
             tasks = []
@@ -141,12 +147,12 @@ class TrashAnalyzer:
         emissions_data = asyncio.run(self.get_all_emissions(trash_items))
         
         # Calculate total emissions
-        total_emissions = sum(item["emissions"] for item in emissions_data if item["emissions"] is not None)
+        total_emissions = sum(item["total_emissions"] for item in emissions_data if item["total_emissions"] is not None)
         
         return {
             "items": emissions_data,
             "total_emissions": total_emissions,
-            "unit": "kg CO2e/kg"
+            "unit": "kg CO2e"
         }
 
 def main():
