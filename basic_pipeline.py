@@ -7,6 +7,8 @@ from openai import OpenAI
 import asyncio
 import aiohttp
 from dotenv import load_dotenv
+from PIL import Image
+import io
 
 class TrashAnalyzer:
     def __init__(self, openai_api_key: str, perplexity_api_key: str):
@@ -14,16 +16,23 @@ class TrashAnalyzer:
         self.perplexity_api_key = perplexity_api_key
         self.perplexity_url = "https://api.perplexity.ai/chat/completions"
 
+    def encode_image(self, image_path: str) -> str:
+        """Encode image as base64 string with resizing."""
+        img = Image.open(image_path)
+        image = img.resize((1000, 1000))  # Resize to suitable resolution
+        
+        with io.BytesIO() as output:
+            image.save(output, format="JPEG")
+            image_bytes = output.getvalue()
+            encoded_image = base64.b64encode(image_bytes).decode('utf-8')
+        return encoded_image
+
     def analyze_image(self, image_path: str) -> List[str]:
         """Analyze image using OpenAI Vision API to identify trash items."""
         try:
-            # Read and encode image
-            with open(image_path, "rb") as image_file:
-                base64_image = base64.b64encode(image_file.read()).decode('utf-8')
+            encoded_image = self.encode_image(image_path)
 
-            # Prepare the message for GPT-4 Vision
             response = self.openai_client.chat.completions.create(
-                #model="gpt-4-vision-preview",
                 model="gpt-4o",
                 messages=[
                     {
@@ -31,24 +40,22 @@ class TrashAnalyzer:
                         "content": [
                             {
                                 "type": "text",
-                                "text": "Please identify all trash/waste items in this image and return them as a JSON list. Format: {\"items\": [\"item1\", \"item2\", ...]}",
+                                "text": "Please identify all trash/waste items in this image and return them as a JSON list. If there are duplicate items, list each multiple times. Format: {\"items\": [\"item1\", \"item2\", ...]}"
                             },
                             {
                                 "type": "image_url",
                                 "image_url": {
-                                    "url": f"data:image/jpeg;base64,{base64_image}"
+                                    "url": f"data:image/jpeg;base64,{encoded_image}"
                                 }
                             }
                         ]
                     }
                 ],
+                response_format={"type": "json_object"},
                 max_tokens=300
             )
 
-            # Parse the response to get trash items
-            content = response.choices[0].message.content
-            trash_items = json.loads(content)["items"]
-            return trash_items
+            return json.loads(response.choices[0].message.content)["items"]
 
         except Exception as e:
             print(f"Error analyzing image: {str(e)}")
@@ -60,19 +67,52 @@ class TrashAnalyzer:
             "Authorization": f"Bearer {self.perplexity_api_key}",
             "Content-Type": "application/json"
         }
-        
-        prompt = f"What is the carbon footprint (in CO2 equivalent) per kilogram of disposing {item} in a landfill? Return only the numeric value in kg CO2e/kg."
-        
-        data = {
-            "model": "mixtral-8x7b-instruct",
-            "messages": [{"role": "user", "content": prompt}]
+
+        payload = {
+            "model": "sonar",
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "Be precise and concise. Output ONLY a single numberic value."
+                },
+                {
+                    "role": "user",
+                    "content": f"What is the carbon footprint (in CO2 equivalent) per kilogram of disposing {item} in a landfill? Return only the numeric value in kg CO2e/kg. Do not include any other text or comments. If you cannot find the information, return a reasonable estimate."
+                }
+            ],
+            "max_tokens": 100,
+            "temperature": 0.2,
+            "top_p": 0.9,
+            "search_domain_filter": None,
+            "return_images": False,
+            "return_related_questions": False,
+            "top_k": 0,
+            "stream": False,
+            "presence_penalty": 0,
+            "frequency_penalty": 1
         }
 
         try:
-            async with session.post(self.perplexity_url, headers=headers, json=data) as response:
+            async with session.post(self.perplexity_url, headers=headers, json=payload) as response:
+                if response.status != 200:
+                    error_text = await response.text()
+                    print(f"API Error for {item}: Status {response.status}, Response: {error_text}")
+                    return {"item": item, "emissions": None}
+                
                 result = await response.json()
-                emissions = float(result['choices'][0]['message']['content'].strip())
-                return {"item": item, "emissions": emissions}
+                if 'choices' not in result:
+                    print(f"Unexpected API response for {item}: {result}")
+                    return {"item": item, "emissions": None}
+                
+                try:
+                    content = result['choices'][0]['message']['content'].strip()
+                    # Extract just the number from the response
+                    emissions = float(''.join(filter(lambda x: x.isdigit() or x == '.', content)))
+                    return {"item": item, "emissions": emissions}
+                except (ValueError, KeyError) as e:
+                    print(f"Error parsing response for {item}: {content}")
+                    return {"item": item, "emissions": None}
+                    
         except Exception as e:
             print(f"Error getting emissions for {item}: {str(e)}")
             return {"item": item, "emissions": None}
@@ -80,7 +120,12 @@ class TrashAnalyzer:
     async def get_all_emissions(self, trash_items: List[str]) -> List[Dict]:
         """Get carbon emissions data for all trash items concurrently."""
         async with aiohttp.ClientSession() as session:
-            tasks = [self.get_emissions_for_item(session, item) for item in trash_items]
+            tasks = []
+            for item in trash_items:
+                task = self.get_emissions_for_item(session, item)
+                tasks.append(task)
+                # Add a small delay between requests
+                await asyncio.sleep(0.5)
             results = await asyncio.gather(*tasks)
             return results
 
