@@ -73,11 +73,11 @@ class TrashAnalyzer:
             "messages": [
                 {
                     "role": "system",
-                    "content": "Be precise and concise. Output ONLY a single numberic value."
+                    "content": "Be precise and concise. Output ONLY a single numberic value. No other explanation or comments or nuance."
                 },
                 {
                     "role": "user",
-                    "content": f"What is the carbon footprint (in CO2 equivalent) per kilogram of disposing {item} in a landfill? Return only the numeric value in kg CO2e/kg. Do not include any other text or comments. If you cannot find the information, return a reasonable estimate."
+                    "content": f"What is the carbon footprint (in CO2 equivalent) per kilogram of disposing {item} in a landfill? Return only the numeric value in kg CO2e/kg. Do not include any other text or comments or nuance. If you cannot find the information, return a reasonable estimate (only return a single number, not any explanation)"
                 }
             ],
             "max_tokens": 100,
