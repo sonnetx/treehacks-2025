@@ -32,10 +32,11 @@ class TrashAnalyzer:
             encoded_image = base64.b64encode(image_bytes).decode('utf-8')
         return encoded_image
 
-    def analyze_image(self, image_path: str) -> List[Dict]:
-        """Analyze image using OpenAI Vision API to identify trash items and their disposal category."""
+    def analyze_images(self, before_image_path: str, after_image_path: str) -> List[Dict]:
+        """Analyze before and after images using OpenAI Vision API to identify new trash items."""
         try:
-            encoded_image = self.encode_image(image_path)
+            encoded_before = self.encode_image(before_image_path)
+            encoded_after = self.encode_image(after_image_path)
 
             response = self.openai_client.chat.completions.create(
                 model="gpt-4o",
@@ -45,12 +46,18 @@ class TrashAnalyzer:
                         "content": [
                             {
                                 "type": "text", 
-                                "text": "Please identify all waste items in this image and categorize them as trash, recycle, or compost. Return as a JSON list. If there are duplicate items, list each multiple times. Format: {\"items\": [{\"name\": \"item1\", \"mass_kg\": 0.5, \"category\": \"recycle\"}, {\"name\": \"item2\", \"mass_kg\": 0.3, \"category\": \"compost\"}, ...]}"
+                                "text": "I will show you two images of a trash area - one before and one after. Please identify only the NEW waste items that appear in the second image and categorize them as trash, recycle, or compost. Return as a JSON list. If there are duplicate new items, list each multiple times. Format: {\"items\": [{\"name\": \"item1\", \"mass_kg\": 0.5, \"category\": \"recycle\"}, {\"name\": \"item2\", \"mass_kg\": 0.3, \"category\": \"compost\"}, ...]}"
                             },
                             {
                                 "type": "image_url",
                                 "image_url": {
-                                    "url": f"data:image/jpeg;base64,{encoded_image}"
+                                    "url": f"data:image/jpeg;base64,{encoded_before}"
+                                }
+                            },
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:image/jpeg;base64,{encoded_after}"
                                 }
                             }
                         ]
@@ -63,7 +70,7 @@ class TrashAnalyzer:
             return json.loads(response.choices[0].message.content)["items"]
 
         except Exception as e:
-            print(f"Error analyzing image: {str(e)}")
+            print(f"Error analyzing images: {str(e)}")
             return []
 
     async def get_emissions_for_item(self, session: aiohttp.ClientSession, item: Dict) -> Dict:
@@ -157,10 +164,10 @@ class TrashAnalyzer:
             results = await asyncio.gather(*tasks)
             return results
 
-    def analyze_trash(self, image_path: str) -> ReportData:
-        """Complete analysis of trash image and return ReportData object."""
-        # Get items from image with categories
-        items = self.analyze_image(image_path)
+    def analyze_trash(self, before_image_path: str, after_image_path: str) -> ReportData:
+        """Complete analysis of before and after trash images and return ReportData object."""
+        # Get new items from images with categories
+        items = self.analyze_images(before_image_path, after_image_path)
         
         if not items:
             return ReportData(0, 0, 0, [], [], 0.0, 0.0)
@@ -203,18 +210,20 @@ def main():
     
     analyzer = TrashAnalyzer(openai_api_key, perplexity_api_key)
     
-    # Example usage
-    # image_path = "trashbin.jpg"
-    image_path = "sample-images/stanfordtrash.jpg"
-    report_data = analyzer.analyze_trash(image_path)
+    # Example usage with before and after images
+    #before_image_path = "sample-images/IMG_6702.jpg"
+    before_image_path = "sample-images/notrash.jpg"
+    after_image_path = "sample-images/IMG_6703.jpg"
+    report_data = analyzer.analyze_trash(before_image_path, after_image_path)
     
+    print("New items added:")
     print(f"Number of trash items: {report_data.numTrash}")
     print(f"Number of compost items: {report_data.numCompost}")
     print(f"Number of recycle items: {report_data.numRecycle}")
-    print(f"Recyclable items: {', '.join(report_data.recycleNames)}")
-    print(f"Compostable items: {', '.join(report_data.compostNames)}")
-    print(f"Potential CO2 savings from recycling: {report_data.recycleSavings:.3f} kg CO2e")
-    print(f"Potential CO2 savings from composting: {report_data.compostSavings:.3f} kg CO2e")
+    print(f"New recyclable items: {', '.join(report_data.recycleNames)}")
+    print(f"New compostable items: {', '.join(report_data.compostNames)}")
+    print(f"Additional CO2 impact from recycling: {report_data.recycleSavings:.3f} kg CO2e")
+    print(f"Additional CO2 impact from composting: {report_data.compostSavings:.3f} kg CO2e")
 
 if __name__ == "__main__":
     main()
