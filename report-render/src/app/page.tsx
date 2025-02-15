@@ -2,7 +2,7 @@
 
 import { BarChart } from "@mui/x-charts/BarChart";
 import { PieChart } from "@mui/x-charts/PieChart";
-import { Lightbulb, Factory, Car } from "lucide-react";
+import { Lightbulb, Leaf, Factory, Home, Car } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function CarbonEmissionsReport() {
@@ -15,37 +15,34 @@ export default function CarbonEmissionsReport() {
   const [data, setData] = useState(null);
 
   useEffect(() => {
-    fetch("/api/reportData") // Calls the Next.js API
+    fetch("/api/reportData")
       .then((res) => res.json())
       .then((data) => {
-        setData(data.data.report_data); // ✅ Set state
-        console.log(data.message); // ✅ Log message properly
+        setData(data.data.report_data);
+        console.log(data.message);
       })
       .catch((error) => console.error("Error fetching data:", error));
   }, []);
 
-  useEffect(() => {
-    console.log(data);
-  }, [data]);
-
   return (
     <div className="min-h-screen bg-gray-100 p-8">
       <main className="container mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
-        <header className="bg-gray-800 text-white p-6">
-          <h1 className="text-3xl font-bold">Annual Carbon Emissions Report</h1>
+        {/* Header */}
+        <header className="bg-gray-800 text-white p-6 text-center">
+          <h1 className="text-3xl font-bold">Ecological Footprint Report</h1>
           <p className="text-gray-300 mt-2">Generated on {currentDate}</p>
         </header>
 
         <div className="p-6 space-y-8">
-          {/* Executive Summary & Total Emissions - Combined Section */}
-          <section className="bg-white shadow-lg rounded-lg p-6">
-            <h2 className="text-2xl font-semibold mb-4 text-black text-center">
+          {/* Executive Summary & Total Emissions */}
+          <section className="bg-white shadow-md rounded-lg p-6">
+            <h2 className="text-2xl font-semibold mb-4 text-center text-black">
               Executive Summary & Total Emissions
             </h2>
 
-            <div className="grid grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-3 gap-6">
               {/* Pie Chart */}
-              <div className="bg-gray-50 rounded-md p-6 shadow-md flex flex-col items-center justify-center">
+              <div className="bg-gray-50 rounded-lg p-6 shadow-md flex flex-col items-center justify-center">
                 <h3 className="text-lg font-semibold text-black mb-2">
                   Waste Breakdown
                 </h3>
@@ -73,13 +70,17 @@ export default function CarbonEmissionsReport() {
                         : [],
                     },
                   ]}
-                  width={300}
-                  height={250}
+                  width={250}
+                  height={200}
+                  legend={{
+                    labelStyle: { fontSize: 12 },
+                    padding: 10,
+                  }}
                 />
               </div>
 
-              {/* Box for Total Emissions Number */}
-              <div className="bg-gray-50 rounded-md p-6 shadow-md flex flex-col items-center justify-center">
+              {/* Total Emissions */}
+              <div className="bg-gray-50 rounded-lg p-6 shadow-md flex flex-col items-center justify-center">
                 <p className="text-xl font-semibold text-black">
                   Total Emissions
                 </p>
@@ -87,8 +88,8 @@ export default function CarbonEmissionsReport() {
                 <p className="text-lg text-gray-500">Metric Tons CO2e</p>
               </div>
 
-              {/* Box for Bar Chart */}
-              <div className="bg-gray-50 rounded-md p-6 shadow-md flex flex-col items-center justify-center">
+              {/* Bar Chart */}
+              <div className="bg-gray-50 rounded-lg p-6 shadow-md flex flex-col items-center justify-center">
                 <h3 className="text-lg font-semibold text-black mb-2">
                   Annual Emissions
                 </h3>
@@ -110,15 +111,15 @@ export default function CarbonEmissionsReport() {
             </div>
           </section>
 
-          {/* Compostable & Recyclable Components Section */}
-          <section className="bg-gray-50 rounded-lg p-6 shadow-md">
-            <h2 className="text-2xl font-semibold mb-4 text-black text-center">
+          {/* Waste Breakdown */}
+          <section className="bg-white rounded-lg p-6 shadow-md">
+            <h2 className="text-2xl font-semibold mb-4 text-center text-black">
               Waste Breakdown
             </h2>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 gap-6">
               {/* Compostable Components */}
-              <div className="bg-green-100 p-4 rounded-md shadow-md">
+              <div className="bg-green-100 p-6 rounded-lg shadow-md">
                 <h3 className="text-lg font-semibold text-green-800 flex items-center gap-2">
                   🌱 Compostable Components
                 </h3>
@@ -136,7 +137,7 @@ export default function CarbonEmissionsReport() {
               </div>
 
               {/* Recyclable Components */}
-              <div className="bg-blue-100 p-4 rounded-md shadow-md">
+              <div className="bg-blue-100 p-6 rounded-lg shadow-md">
                 <h3 className="text-lg font-semibold text-blue-800 flex items-center gap-2">
                   ♻️ Recyclable Components
                 </h3>
@@ -155,27 +156,51 @@ export default function CarbonEmissionsReport() {
             </div>
           </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-4 text-black">
-              Reduction Strategies
+          {/* Reduction Strategies */}
+          <section className="bg-white rounded-lg p-6 shadow-md">
+            <h2 className="text-2xl font-semibold mb-4 text-center text-black">
+              🌿 Reduction Strategies
             </h2>
-            <ul className="list-disc pl-5 space-y-2 text-gray-600">
-              <li>Implement energy-efficient lighting across all facilities</li>
-              <li>Increase use of renewable energy sources</li>
-              <li>Optimize manufacturing processes to reduce waste</li>
-              <li>Encourage remote work to decrease commuting emissions</li>
-              <li>Invest in electric vehicles for company fleet</li>
-            </ul>
+
+            <div className="grid md:grid-cols-2 gap-6">
+              {[
+                {
+                  icon: Lightbulb,
+                  color: "text-yellow-500",
+                  text: "Implement energy-efficient lighting across all facilities",
+                },
+                {
+                  icon: Leaf,
+                  color: "text-green-500",
+                  text: "Increase use of renewable energy sources",
+                },
+                {
+                  icon: Factory,
+                  color: "text-gray-600",
+                  text: "Optimize manufacturing processes to reduce waste",
+                },
+                {
+                  icon: Home,
+                  color: "text-blue-500",
+                  text: "Encourage remote work to decrease commuting emissions",
+                },
+                {
+                  icon: Car,
+                  color: "text-red-500",
+                  text: "Invest in electric vehicles for company fleet",
+                },
+              ].map((item, index) => (
+                <div
+                  key={index}
+                  className="bg-gray-50 p-4 rounded-lg shadow-md flex items-center space-x-4"
+                >
+                  <item.icon className={`w-6 h-6 ${item.color}`} />
+                  <p className="text-gray-700">{item.text}</p>
+                </div>
+              ))}
+            </div>
           </section>
         </div>
-
-        <footer className="bg-gray-100 p-6 mt-8">
-          <p className="text-sm text-gray-600 text-center">
-            This report was generated using verified data sources and follows
-            the GHG Protocol Corporate Standard. For more information, please
-            contact our sustainability team.
-          </p>
-        </footer>
       </main>
     </div>
   );
