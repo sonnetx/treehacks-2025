@@ -1,22 +1,35 @@
 class ReportData:
-    def __init__(self, numTrash: int, numCompost: int, numRecycle: int, recycleNames: list[str], compostNames: list[str], recycleSavings: int, compostSavings: int):
+    def __init__(self, 
+                 numTrash: int, 
+                 numCompost: int, 
+                 numRecycle: int, 
+                 trashNames: list[str],
+                 recycleNames: list[str], 
+                 compostNames: list[str], 
+                 trashEmissions: float,
+                 compostInTrashEmissions: float,
+                 recycleInTrashEmissions: float):
         self.numTrash = numTrash
         self.numCompost = numCompost
         self.numRecycle = numRecycle
+        self.trashNames = trashNames
         self.recycleNames = recycleNames
         self.compostNames = compostNames
-        self.recycleSavings = recycleSavings
-        self.compostSavings = compostSavings
+        self.trashEmissions = trashEmissions  # Scope 2 emissions from trash in trash
+        self.compostInTrashEmissions = compostInTrashEmissions  # Scope 2 emissions from compost in trash
+        self.recycleInTrashEmissions = recycleInTrashEmissions  # Scope 2 emissions from recyclables in trash
 
     def to_dict(self):
         return {
             "numTrash": self.numTrash,
             "numCompost": self.numCompost,
             "numRecycle": self.numRecycle,
+            "trashNames": self.trashNames,
             "recycleNames": self.recycleNames,
             "compostNames": self.compostNames,
-            "recycleSavings": self.recycleSavings,
-            "compostSavings": self.compostSavings
+            "trashEmissions": self.trashEmissions,
+            "compostInTrashEmissions": self.compostInTrashEmissions,
+            "recycleInTrashEmissions": self.recycleInTrashEmissions
         }
 
 class Report:

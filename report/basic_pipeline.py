@@ -46,7 +46,7 @@ class TrashAnalyzer:
                         "content": [
                             {
                                 "type": "text", 
-                                "text": "I will show you two images of a trash area - one before and one after. Please identify only the NEW waste items that appear in the second image and categorize them as trash, recycle, or compost. Return as a JSON list. If there are duplicate new items, list each multiple times. Format: {\"items\": [{\"name\": \"item1\", \"mass_kg\": 0.5, \"category\": \"recycle\"}, {\"name\": \"item2\", \"mass_kg\": 0.3, \"category\": \"compost\"}, ...]}"
+                                "text": "I will show you two images of a trash area - one before and one after. Please identify only the NEW waste items that appear in the second image and categorize them as trash, recycle, or compost. Return as a JSON list. If there are duplicate new items, list each multiple times. Format: {\"items\": [{\"name\": \"item1\", \"mass_kg\": 0.5, \"proper_category\": \"recycle\"}, {\"name\": \"item2\", \"mass_kg\": 0.3, \"proper_category\": \"compost\"}, ...]}"
                             },
                             {
                                 "type": "image_url",
@@ -74,13 +74,11 @@ class TrashAnalyzer:
             return []
 
     async def get_emissions_for_item(self, session: aiohttp.ClientSession, item: Dict) -> Dict:
-        """Get carbon emissions data for a single item using Perplexity API."""
+        """Get landfill emissions data for a single item using Perplexity API."""
         headers = {
             "Authorization": f"Bearer {self.perplexity_api_key}",
             "Content-Type": "application/json"
         }
-
-        disposal_method = "landfill" if item['category'] == "trash" else item['category']
         
         payload = {
             "model": "sonar",
@@ -91,7 +89,7 @@ class TrashAnalyzer:
                 },
                 {
                     "role": "user",
-                    "content": f"What is the carbon footprint (in CO2 equivalent) per kilogram of disposing {item['name']} in a {disposal_method}? Return only the numeric value in kg CO2e/kg."
+                    "content": f"What is the carbon footprint (in CO2 equivalent) per kilogram of disposing {item['name']} in a landfill? Return only the numeric value in kg CO2e/kg."
                 }
             ],
             "response_format": {
@@ -108,12 +106,12 @@ class TrashAnalyzer:
                 if response.status != 200:
                     error_text = await response.text()
                     print(f"API Error for {item['name']}: Status {response.status}, Response: {error_text}")
-                    return {"item": item['name'], "mass_kg": item['mass_kg'], "category": item['category'], "emissions_per_kg": None, "total_emissions": None}
+                    return {"item": item['name'], "mass_kg": item['mass_kg'], "proper_category": item['proper_category'], "landfill_emissions": None}
                 
                 result = await response.json()
                 if 'choices' not in result:
                     print(f"Unexpected API response for {item['name']}: {result}")
-                    return {"item": item['name'], "mass_kg": item['mass_kg'], "category": item['category'], "emissions_per_kg": None, "total_emissions": None}
+                    return {"item": item['name'], "mass_kg": item['mass_kg'], "proper_category": item['proper_category'], "landfill_emissions": None}
                 
                 try:
                     perplexity_response = result['choices'][0]['message']['content']
@@ -138,23 +136,23 @@ class TrashAnalyzer:
                     content = json.loads(openai_response.choices[0].message.content)
                     emissions_per_kg = content['emissions_per_kg']
                     total_emissions = emissions_per_kg * item['mass_kg']
+                    
                     return {
-                        "item": item['name'], 
+                        "item": item['name'],
                         "mass_kg": item['mass_kg'],
-                        "category": item['category'],
-                        "emissions_per_kg": emissions_per_kg,
-                        "total_emissions": total_emissions
+                        "proper_category": item['proper_category'],
+                        "landfill_emissions": total_emissions
                     }
                 except (ValueError, KeyError, json.JSONDecodeError) as e:
                     print(f"Error parsing response for {item['name']}: {result['choices'][0]['message']['content']}")
-                    return {"item": item['name'], "mass_kg": item['mass_kg'], "category": item['category'], "emissions_per_kg": None, "total_emissions": None}
+                    return {"item": item['name'], "mass_kg": item['mass_kg'], "proper_category": item['proper_category'], "landfill_emissions": None}
                     
         except Exception as e:
             print(f"Error getting emissions for {item['name']}: {str(e)}")
-            return {"item": item['name'], "mass_kg": item['mass_kg'], "category": item['category'], "emissions_per_kg": None, "total_emissions": None}
+            return {"item": item['name'], "mass_kg": item['mass_kg'], "proper_category": item['proper_category'], "landfill_emissions": None}
 
     async def get_all_emissions(self, items: List[Dict]) -> List[Dict]:
-        """Get carbon emissions data for all items concurrently."""
+        """Get landfill emissions data for all items concurrently."""
         async with aiohttp.ClientSession() as session:
             tasks = []
             for item in items:
@@ -165,39 +163,37 @@ class TrashAnalyzer:
             return results
 
     def analyze_trash(self, before_image_path: str, after_image_path: str) -> ReportData:
-        """Complete analysis of before and after trash images and return ReportData object."""
-        # Get new items from images with categories
+        """Analyze new items in trash and calculate emissions impact."""
         items = self.analyze_images(before_image_path, after_image_path)
         
         if not items:
-            return ReportData(0, 0, 0, [], [], 0.0, 0.0)
+            return ReportData(0, 0, 0, [], [], [], 0.0, 0.0, 0.0)
 
-        # Get emissions data for all items
         emissions_data = asyncio.run(self.get_all_emissions(items))
         
-        # Count items by category
-        num_trash = sum(1 for item in emissions_data if item["category"] == "trash")
-        num_compost = sum(1 for item in emissions_data if item["category"] == "compost")
-        num_recycle = sum(1 for item in emissions_data if item["category"] == "recycle")
+        # Group items by their proper category
+        trash_items = [item for item in emissions_data if item["proper_category"] == "trash"]
+        compost_items = [item for item in emissions_data if item["proper_category"] == "compost"]
+        recycle_items = [item for item in emissions_data if item["proper_category"] == "recycle"]
         
-        # Get names of recyclable and compostable items
-        recycle_names = [item["item"] for item in emissions_data if item["category"] == "recycle"]
-        compost_names = [item["item"] for item in emissions_data if item["category"] == "compost"]
-        
-        # Calculate potential savings and ensure they're positive
-        recycle_savings = abs(sum(item["total_emissions"] for item in emissions_data 
-                            if item["category"] == "recycle" and item["total_emissions"] is not None))
-        compost_savings = abs(sum(item["total_emissions"] for item in emissions_data 
-                            if item["category"] == "compost" and item["total_emissions"] is not None))
+        # Calculate scope 2 emissions for each category going to landfill
+        trash_emissions = sum(item["landfill_emissions"] for item in trash_items 
+                            if item["landfill_emissions"] is not None)
+        compost_emissions = sum(item["landfill_emissions"] for item in compost_items 
+                              if item["landfill_emissions"] is not None)
+        recycle_emissions = sum(item["landfill_emissions"] for item in recycle_items 
+                              if item["landfill_emissions"] is not None)
         
         return ReportData(
-            numTrash=num_trash,
-            numCompost=num_compost,
-            numRecycle=num_recycle,
-            recycleNames=recycle_names,
-            compostNames=compost_names,
-            recycleSavings=recycle_savings,
-            compostSavings=compost_savings
+            numTrash=len(trash_items),
+            numCompost=len(compost_items),
+            numRecycle=len(recycle_items),
+            trashNames=[item["item"] for item in trash_items],
+            recycleNames=[item["item"] for item in recycle_items],
+            compostNames=[item["item"] for item in compost_items],
+            trashEmissions=trash_emissions,
+            compostInTrashEmissions=compost_emissions,
+            recycleInTrashEmissions=recycle_emissions
         )
 
 def main():
@@ -212,18 +208,20 @@ def main():
     
     # Example usage with before and after images
     #before_image_path = "sample-images/IMG_6702.jpg"
-    before_image_path = "sample-images/notrash.jpg"
-    after_image_path = "sample-images/IMG_6703.jpg"
+    before_image_path = "../sample-images/notrash.jpg"
+    after_image_path = "../sample-images/IMG_6703.jpg"
     report_data = analyzer.analyze_trash(before_image_path, after_image_path)
     
-    print("New items added:")
+    print("\nAnalysis Results:")
     print(f"Number of trash items: {report_data.numTrash}")
     print(f"Number of compost items: {report_data.numCompost}")
     print(f"Number of recycle items: {report_data.numRecycle}")
-    print(f"New recyclable items: {', '.join(report_data.recycleNames)}")
-    print(f"New compostable items: {', '.join(report_data.compostNames)}")
-    print(f"Additional CO2 impact from recycling: {report_data.recycleSavings:.3f} kg CO2e")
-    print(f"Additional CO2 impact from composting: {report_data.compostSavings:.3f} kg CO2e")
+    print(f"Trash items: {', '.join(report_data.trashNames)}")
+    print(f"Recyclable items: {', '.join(report_data.recycleNames)}")
+    print(f"Compostable items: {', '.join(report_data.compostNames)}")
+    print(f"CO2 impact from trash: {report_data.trashEmissions:.3f} kg CO2e")
+    print(f"CO2 impact from compost in trash: {report_data.compostInTrashEmissions:.3f} kg CO2e")
+    print(f"CO2 impact from recyclables in trash: {report_data.recycleInTrashEmissions:.3f} kg CO2e")
 
 if __name__ == "__main__":
     main()
