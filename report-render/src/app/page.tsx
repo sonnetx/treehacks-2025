@@ -107,25 +107,27 @@ export default function CarbonEmissionsReport() {
                 <h3 className="text-lg font-semibold text-black mb-2">
                   Emissions
                 </h3>
-                <BarChart
-                  xAxis={[
-                    {
-                      scaleType: "band",
-                      data: ["Trash", "Recycle", "Compose"],
-                    },
-                  ]}
-                  series={[
-                    {
-                      data: [
-                        data.trashEmissions,
-                        data.recycleInTrashEmissions,
-                        data.compostInTrashEmissions,
-                      ],
-                    },
-                  ]}
-                  width={300}
-                  height={250}
-                />
+                {data && (
+                  <BarChart
+                    xAxis={[
+                      {
+                        scaleType: "band",
+                        data: ["Trash", "Recycle", "Compose"],
+                      },
+                    ]}
+                    series={[
+                      {
+                        data: [
+                          data.trashEmissions,
+                          data.recycleInTrashEmissions,
+                          data.compostInTrashEmissions,
+                        ],
+                      },
+                    ]}
+                    width={300}
+                    height={250}
+                  />
+                )}
                 <p className="text-sm text-gray-500 mt-2 text-center">
                   Annual Carbon Emissions (metric tons CO2e)
                 </p>
