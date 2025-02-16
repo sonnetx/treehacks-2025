@@ -310,7 +310,17 @@ class TrashAnalyzer:
         trash_items = [item for item in emissions_data if item["proper_category"] == "trash"]
         compost_items = [item for item in emissions_data if item["proper_category"] == "compost"]
         recycle_items = [item for item in emissions_data if item["proper_category"] == "recycle"]
-        
+
+        # Send notifications to hardware
+        ser = serial.Serial('/dev/cu.usbmodem2101', 115200, timeout=1)
+        if (compost_items != [] or recycle_items != []):
+            ser.write(f"incorrect\n".encode())
+            print(f"Sent command: incorrect")
+        else:
+            ser.write(f"correct\n".encode())
+            print(f"Sent command: correct")
+        ser.close()
+
         # Calculate scope 2 emissions for each category going to landfill
         trash_emissions = sum(item["landfill_emissions"] for item in trash_items 
                             if item["landfill_emissions"] is not None)
