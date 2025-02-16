@@ -1,23 +1,14 @@
 import serial
 import time
 
-# Replace 'COM3' with the appropriate port for your Feather
-ser = serial.Serial('COM3', 115200, timeout=1)
+ser = serial.Serial('/dev/cu.usbmodem2101', 115200, timeout=1)
 
+def show_correct():
+    ser.write(f"correct\n".encode())
+    print(f"Sent command: correct")
 
-def send_command(command):
-    ser.write(f"{command}\n".encode())
-    print(f"Sent command: {command}")
+def show_incorrect():
+    ser.write(f"incorrect\n".encode())
+    print(f"Sent command: incorrect")
 
-
-try:
-    while True:
-        command = input("Enter command (correct/incorrect): ").strip().lower()
-        if command in ['correct', 'incorrect']:
-            send_command(command)
-        elif command == 'exit':
-            break
-        else:
-            print("Invalid command. Use 'correct' or 'incorrect'.")
-finally:
-    ser.close()
+ser.close()
