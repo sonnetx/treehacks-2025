@@ -235,7 +235,9 @@ class TrashAnalyzer:
         recycle_items = [item for item in emissions_data if item["proper_category"] == "recycle"]
 
         # Send notifications to hardware
-        # ser = serial.Serial('/dev/cu.usbmodem2101', 115200, timeout=1)
+        ser = serial.Serial('/dev/tty.usbmodem1101', 115200, timeout=1)
+        ser.write(f"incorrect\n".encode())
+        
         # if (compost_items != [] or recycle_items != []):
         #     ser.write(f"incorrect\n".encode())
         #     print(f"Sent command: incorrect")
