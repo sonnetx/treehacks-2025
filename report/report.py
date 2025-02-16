@@ -8,7 +8,8 @@ class ReportData:
                  compostNames: list[str], 
                  trashEmissions: float,
                  compostInTrashEmissions: float,
-                 recycleInTrashEmissions: float):
+                 recycleInTrashEmissions: float,
+                 recommendations: list[str] = None):
         self.numTrash = numTrash
         self.numCompost = numCompost
         self.numRecycle = numRecycle
@@ -18,7 +19,7 @@ class ReportData:
         self.trashEmissions = trashEmissions  # Scope 2 emissions from trash in trash
         self.compostInTrashEmissions = compostInTrashEmissions  # Scope 2 emissions from compost in trash
         self.recycleInTrashEmissions = recycleInTrashEmissions  # Scope 2 emissions from recyclables in trash
-        self.recommendations = []
+        self.recommendations = recommendations if recommendations else []
 
     def to_dict(self):
         return {
