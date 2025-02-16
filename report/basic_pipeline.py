@@ -99,7 +99,6 @@ class TrashAnalyzer:
                     {"role": "system", "content": prompt},
                     {"role": "user", "content": item}
                 ],
-                # response_format={"type": "json_object"},
                 max_tokens=300
             )
 
