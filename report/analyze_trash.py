@@ -134,6 +134,9 @@ def main():
     print(f"Number of recycle items: {report_data.numRecycle}")
     print(f"Recyclable items: {', '.join(report_data.recycleNames)}")
     print(f"Compostable items: {', '.join(report_data.compostNames)}")
+    print(f"Trash emissions: {report_data.trashEmissions} kg CO2e")
+    print(f"Recycle emissions: {report_data.recycleInTrashEmissions} kg CO2e")
+    print(f"Compost emissions: {report_data.compostInTrashEmissions} kg CO2e")
 
 if __name__ == "__main__":
     main() 

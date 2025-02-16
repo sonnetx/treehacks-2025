@@ -11,6 +11,10 @@ from PIL import Image
 import io
 from report import ReportData
 from pydantic import BaseModel
+import ssl
+import certifi
+
+ssl_context = ssl.create_default_context(cafile=certifi.where())
 
 class EmissionsResponse(BaseModel):
     emissions_per_kg: float
@@ -103,13 +107,91 @@ class TrashAnalyzer:
         return recommendations
         
 
+    # async def get_emissions_for_item(self, session: aiohttp.ClientSession, item: Dict) -> Dict:
+    #     """Get landfill emissions data for a single item using Perplexity API."""
+    #     headers = {
+    #         "Authorization": f"Bearer {self.perplexity_api_key}",
+    #         "Content-Type": "application/json"
+    #     }
+        
+    #     payload = {
+    #         "model": "sonar",
+    #         "messages": [
+    #             {
+    #                 "role": "system",
+    #                 "content": "Return a JSON object with a single field 'emissions_per_kg' containing the numeric value."
+    #             },
+    #             {
+    #                 "role": "user",
+    #                 "content": f"What is the carbon footprint (in CO2 equivalent) per kilogram of disposing {item['name']} in a landfill? Return only the numeric value in kg CO2e/kg."
+    #             }
+    #         ],
+    #         "response_format": {
+    #             "type": "json_schema",
+    #             "json_schema": {"schema": EmissionsResponse.model_json_schema()}
+    #         },
+    #         "max_tokens": 100,
+    #         "temperature": 0.2,
+    #         "top_p": 0.9
+    #     }
+
+    #     try:
+    #         async with session.post(self.perplexity_url, headers=headers, json=payload) as response:
+    #             if response.status != 200:
+    #                 error_text = await response.text()
+    #                 print(f"API Error for {item['name']}: Status {response.status}, Response: {error_text}")
+    #                 return {"item": item['name'], "mass_kg": item['mass_kg'], "proper_category": item['proper_category'], "landfill_emissions": None}
+                
+    #             result = await response.json()
+    #             if 'choices' not in result:
+    #                 print(f"Unexpected API response for {item['name']}: {result}")
+    #                 return {"item": item['name'], "mass_kg": item['mass_kg'], "proper_category": item['proper_category'], "landfill_emissions": None}
+                
+    #             try:
+    #                 perplexity_response = result['choices'][0]['message']['content']
+                    
+    #                 # Use OpenAI to parse and structure the response
+    #                 openai_response = self.openai_client.chat.completions.create(
+    #                     model="gpt-4o-mini",
+    #                     messages=[
+    #                         {
+    #                             "role": "system",
+    #                             "content": "Parse the input and return a JSON object with a single field 'emissions_per_kg' containing just the numeric value. Remove any units or extra text. If there's no value in the input, use a reasonable estimate."
+    #                         },
+    #                         {
+    #                             "role": "user",
+    #                             "content": perplexity_response
+    #                         }
+    #                     ],
+    #                     response_format={"type": "json_object"},
+    #                     max_tokens=100
+    #                 )
+                    
+    #                 content = json.loads(openai_response.choices[0].message.content)
+    #                 emissions_per_kg = content['emissions_per_kg']
+    #                 total_emissions = emissions_per_kg * item['mass_kg']
+                    
+    #                 return {
+    #                     "item": item['name'],
+    #                     "mass_kg": item['mass_kg'],
+    #                     "proper_category": item['proper_category'],
+    #                     "landfill_emissions": total_emissions
+    #                 }
+    #             except (ValueError, KeyError, json.JSONDecodeError) as e:
+    #                 print(f"Error parsing response for {item['name']}: {result['choices'][0]['message']['content']}")
+    #                 return {"item": item['name'], "mass_kg": item['mass_kg'], "proper_category": item['proper_category'], "landfill_emissions": None}
+                    
+    #     except Exception as e:
+    #         print(f"Error getting emissions for {item['name']}: {str(e)}")
+    #         return {"item": item['name'], "mass_kg": item['mass_kg'], "proper_category": item['proper_category'], "landfill_emissions": None}
+
     async def get_emissions_for_item(self, session: aiohttp.ClientSession, item: Dict) -> Dict:
         """Get landfill emissions data for a single item using Perplexity API."""
         headers = {
             "Authorization": f"Bearer {self.perplexity_api_key}",
             "Content-Type": "application/json"
         }
-        
+
         payload = {
             "model": "sonar",
             "messages": [
@@ -132,27 +214,40 @@ class TrashAnalyzer:
         }
 
         try:
-            async with session.post(self.perplexity_url, headers=headers, json=payload) as response:
+            async with session.post(
+                self.perplexity_url, headers=headers, json=payload, ssl=ssl_context
+            ) as response:
                 if response.status != 200:
                     error_text = await response.text()
                     print(f"API Error for {item['name']}: Status {response.status}, Response: {error_text}")
-                    return {"item": item['name'], "mass_kg": item['mass_kg'], "proper_category": item['proper_category'], "landfill_emissions": None}
-                
+                    return {
+                        "item": item['name'],
+                        "mass_kg": item['mass_kg'],
+                        "proper_category": item['proper_category'],
+                        "landfill_emissions": None
+                    }
+
                 result = await response.json()
                 if 'choices' not in result:
                     print(f"Unexpected API response for {item['name']}: {result}")
-                    return {"item": item['name'], "mass_kg": item['mass_kg'], "proper_category": item['proper_category'], "landfill_emissions": None}
-                
+                    return {
+                        "item": item['name'],
+                        "mass_kg": item['mass_kg'],
+                        "proper_category": item['proper_category'],
+                        "landfill_emissions": None
+                    }
+
                 try:
                     perplexity_response = result['choices'][0]['message']['content']
                     
-                    # Use OpenAI to parse and structure the response
+                    print(f"Perplexity response: {perplexity_response}")
+
                     openai_response = self.openai_client.chat.completions.create(
                         model="gpt-4o-mini",
                         messages=[
                             {
                                 "role": "system",
-                                "content": "Parse the input and return a JSON object with a single field 'emissions_per_kg' containing just the numeric value. Remove any units or extra text. If there's no value in the input, use a reasonable estimate."
+                                "content": "Parse the input and return a JSON object with a single field 'emissions_per_kg' containing just the numeric value."
                             },
                             {
                                 "role": "user",
@@ -162,11 +257,11 @@ class TrashAnalyzer:
                         response_format={"type": "json_object"},
                         max_tokens=100
                     )
-                    
+
                     content = json.loads(openai_response.choices[0].message.content)
                     emissions_per_kg = content['emissions_per_kg']
                     total_emissions = emissions_per_kg * item['mass_kg']
-                    
+
                     return {
                         "item": item['name'],
                         "mass_kg": item['mass_kg'],
@@ -175,12 +270,22 @@ class TrashAnalyzer:
                     }
                 except (ValueError, KeyError, json.JSONDecodeError) as e:
                     print(f"Error parsing response for {item['name']}: {result['choices'][0]['message']['content']}")
-                    return {"item": item['name'], "mass_kg": item['mass_kg'], "proper_category": item['proper_category'], "landfill_emissions": None}
-                    
+                    return {
+                        "item": item['name'],
+                        "mass_kg": item['mass_kg'],
+                        "proper_category": item['proper_category'],
+                        "landfill_emissions": None
+                    }
+
         except Exception as e:
             print(f"Error getting emissions for {item['name']}: {str(e)}")
-            return {"item": item['name'], "mass_kg": item['mass_kg'], "proper_category": item['proper_category'], "landfill_emissions": None}
-
+            return {
+                "item": item['name'],
+                "mass_kg": item['mass_kg'],
+                "proper_category": item['proper_category'],
+                "landfill_emissions": None
+            }
+        
     async def get_all_emissions(self, items: List[Dict]) -> List[Dict]:
         """Get landfill emissions data for all items concurrently."""
         async with aiohttp.ClientSession() as session:
