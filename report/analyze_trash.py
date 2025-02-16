@@ -12,8 +12,8 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
 sys.path.append(PROJECT_ROOT)
 
-from report.basic_pipeline import TrashAnalyzer
-from report.report import ReportData
+from basic_pipeline import TrashAnalyzer
+from report import ReportData
 from dotenv import load_dotenv
 
 class CameraCapture:
