@@ -1,6 +1,7 @@
 from flask import Flask, jsonify
 from report import ReportData, Report
 from basic_pipeline import EmissionsResponse, TrashAnalyzer
+from analyze_trash import CameraCapture
 
 import os
 
@@ -17,9 +18,12 @@ def get_data():
     
     analyzer = TrashAnalyzer(openai_api_key, perplexity_api_key)
     
-    before_image_path = "sample-images/notrash.jpg"
-    after_image_path = "sample-images/IMG_6703.jpg"
-    report_data = analyzer.analyze_trash(before_image_path, after_image_path)
+    camera = CameraCapture()
+    
+    # Capture images
+    before_path, after_path = camera.capture_before_after()
+
+    report_data = analyzer.analyze_trash(before_path, after_path)
 
     report = Report(report_data=report_data)
     return jsonify(report.to_dict())  # Send as JSON
