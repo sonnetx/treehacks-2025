@@ -24,6 +24,10 @@ export default function CarbonEmissionsReport() {
       .catch((error) => console.error("Error fetching data:", error));
   }, []);
 
+  useEffect(() => {
+    console.log(data);
+  }, [data]);
+
   return (
     <div className="min-h-screen bg-gray-100 p-8">
       <main className="container mx-auto bg-white shadow-lg rounded-lg overflow-hidden">
@@ -84,23 +88,41 @@ export default function CarbonEmissionsReport() {
                 <p className="text-xl font-semibold text-black">
                   Total Emissions
                 </p>
-                <span className="text-5xl font-bold text-blue-600">123.45</span>
-                <p className="text-lg text-gray-500">Metric Tons CO2e</p>
+                <span className="text-5xl font-bold text-blue-600">
+                  {data
+                    ? Number(
+                        parseFloat(data.recycleInTrashEmissions.toFixed(4) ?? 0)
+                      ) +
+                      Number(
+                        parseFloat(data.compostInTrashEmissions.toFixed(4) ?? 0)
+                      ) +
+                      Number(parseFloat(data.trashEmissions.toFixed(4) ?? 0))
+                    : "Loading..."}
+                </span>
+                <p className="text-lg text-gray-500">kg CO2e</p>
               </div>
 
               {/* Bar Chart */}
               <div className="bg-gray-50 rounded-lg p-6 shadow-md flex flex-col items-center justify-center">
                 <h3 className="text-lg font-semibold text-black mb-2">
-                  Annual Emissions
+                  Emissions
                 </h3>
                 <BarChart
                   xAxis={[
                     {
                       scaleType: "band",
-                      data: ["2020", "2021", "2022", "2023"],
+                      data: ["Trash", "Recycle", "Compose"],
                     },
                   ]}
-                  series={[{ data: [50, 75, 100, 125] }]}
+                  series={[
+                    {
+                      data: [
+                        data.trashEmissions,
+                        data.recycleInTrashEmissions,
+                        data.compostInTrashEmissions,
+                      ],
+                    },
+                  ]}
                   width={300}
                   height={250}
                 />
