@@ -42,63 +42,25 @@ class CameraCapture:
         xoutRgb.setStreamName("rgb")
         colorCam.preview.link(xoutRgb.input)
 
-        return pipeline
+        return pipeline  
+         
 
-    def capture_before_after(self) -> Tuple[Optional[str], Optional[str]]:
+    def capture_image(self) -> Optional[str]:
         """
-        Capture before and after images using the OAK-D camera.
-        Returns tuple of (before_image_path, after_image_path).
+        Captures an image from the OAK-D camera instantly and saves it as 'after_TIMESTAMP.jpg'.
         """
         with dai.Device(self.pipeline) as device:
             qRgb = device.getOutputQueue(name="rgb", maxSize=4, blocking=False)
             
-            print("\nCapturing BEFORE image...")
-            print("Press 'c' to capture the BEFORE image, 'q' to quit")
-            
-            before_path = None
-            after_path = None
-            
-            # Capture before image
-            while True:
-                inRgb = qRgb.get()
-                frame = inRgb.getCvFrame()
-                
-                cv2.imshow("Camera Feed", frame)
-                key = cv2.waitKey(1)
-                
-                if key == ord('q'):
-                    cv2.destroyAllWindows()
-                    return None, None
-                elif key == ord('c'):
-                    timestamp = time.strftime("%Y%m%d_%H%M%S")
-                    before_path = f"{self.save_path}/before_{timestamp}.jpg"
-                    cv2.imwrite(before_path, frame)
-                    print(f"Saved BEFORE image: {before_path}")
-                    break
-            
-            print("\nCapturing AFTER image...")
-            print("Press 'c' to capture the AFTER image, 'q' to quit")
-            
-            # Capture after image
-            while True:
-                inRgb = qRgb.get()
-                frame = inRgb.getCvFrame()
-                
-                cv2.imshow("Camera Feed", frame)
-                key = cv2.waitKey(1)
-                
-                if key == ord('q'):
-                    cv2.destroyAllWindows()
-                    return None, None
-                elif key == ord('c'):
-                    timestamp = time.strftime("%Y%m%d_%H%M%S")
-                    after_path = f"{self.save_path}/after_{timestamp}.jpg"
-                    cv2.imwrite(after_path, frame)
-                    print(f"Saved AFTER image: {after_path}")
-                    break
-            
-            cv2.destroyAllWindows()
-            return before_path, after_path
+            # Wait for the first available frame
+            inRgb = qRgb.get()
+            frame = inRgb.getCvFrame()
+
+            image_path = os.path.join(self.save_path, f"after.jpg")
+            cv2.imwrite(image_path, frame)
+
+            print(f"Saved image: {image_path}")
+            return image_path
 
 def main():
     # Load environment variables

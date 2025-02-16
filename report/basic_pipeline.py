@@ -81,7 +81,7 @@ class TrashAnalyzer:
 
     def get_recommendations(self, trash_items: List[Dict], compost_items: List[Dict], recycle_items: List[Dict]) -> List[str]:
         """Get recommendations based on trash items, compost items, and recycle items."""
-        prompt = "Based on the items identified in the trash, compost, and recycling bins, provide recommendations to reduce waste and improve recycling rates. Include suggestions for reducing waste, composting, and recycling more effectively."
+        prompt = "Based on the items identified in the trash, compost, and recycling bins, provide recommendations to reduce waste and improve recycling rates. Include suggestions for reducing waste, composting, and recycling more effectively. Please make these recommendations at most 2 sentences."
         print(trash_items)
         print(compost_items)
         print(recycle_items)

@@ -28,11 +28,10 @@ def get_data():
     analyzer = TrashAnalyzer(openai_api_key, perplexity_api_key)
     
     # # Initialize camera and capture images
-    # camera = CameraCapture()
-    # before_path, after_path = camera.capture_before_after()
+    camera = CameraCapture()
     
     before_path = "sample-images/before.jpg"
-    after_path = "sample-images/after.jpg"
+    after_path = camera.capture_image()
     
     report_data = analyzer.analyze_trash(before_path, after_path)
 

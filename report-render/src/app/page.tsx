@@ -129,7 +129,7 @@ export default function CarbonEmissionsReport() {
                   />
                 )}
                 <p className="text-sm text-gray-500 mt-2 text-center">
-                  Annual Carbon Emissions (metric tons CO2e)
+                  Equivalent Emissions (kg CO2e)
                 </p>
               </div>
             </div>
@@ -187,41 +187,16 @@ export default function CarbonEmissionsReport() {
             </h2>
 
             <div className="grid md:grid-cols-2 gap-6">
-              {[
-                {
-                  icon: Lightbulb,
-                  color: "text-yellow-500",
-                  text: "Implement energy-efficient lighting across all facilities",
-                },
-                {
-                  icon: Leaf,
-                  color: "text-green-500",
-                  text: "Increase use of renewable energy sources",
-                },
-                {
-                  icon: Factory,
-                  color: "text-gray-600",
-                  text: "Optimize manufacturing processes to reduce waste",
-                },
-                {
-                  icon: Home,
-                  color: "text-blue-500",
-                  text: "Encourage remote work to decrease commuting emissions",
-                },
-                {
-                  icon: Car,
-                  color: "text-red-500",
-                  text: "Invest in electric vehicles for company fleet",
-                },
-              ].map((item, index) => (
-                <div
-                  key={index}
-                  className="bg-gray-50 p-4 rounded-lg shadow-md flex items-center space-x-4"
-                >
-                  <item.icon className={`w-6 h-6 ${item.color}`} />
-                  <p className="text-gray-700">{item.text}</p>
-                </div>
-              ))}
+              {data &&
+                data.recommendations.map((item, index) => (
+                  <div
+                    key={index}
+                    className="bg-gray-50 p-4 rounded-lg shadow-md flex items-center space-x-4"
+                  >
+                    {/* <item.icon className={`w-6 h-6 ${item.color}`} /> */}
+                    <p className="text-gray-700">{item}</p>
+                  </div>
+                ))}
             </div>
           </section>
         </div>
