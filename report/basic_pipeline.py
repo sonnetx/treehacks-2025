@@ -9,7 +9,7 @@ import aiohttp
 from dotenv import load_dotenv
 from PIL import Image
 import io
-from .report import ReportData
+from report import ReportData
 from pydantic import BaseModel
 
 class EmissionsResponse(BaseModel):
