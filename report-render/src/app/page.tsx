@@ -90,13 +90,19 @@ export default function CarbonEmissionsReport() {
                 </p>
                 <span className="text-5xl font-bold text-blue-600">
                   {data
-                    ? Number(
-                        parseFloat(data.recycleInTrashEmissions.toFixed(4) ?? 0)
-                      ) +
-                      Number(
-                        parseFloat(data.compostInTrashEmissions.toFixed(4) ?? 0)
-                      ) +
-                      Number(parseFloat(data.trashEmissions.toFixed(4) ?? 0))
+                    ? (
+                        Number(
+                          parseFloat(
+                            data.recycleInTrashEmissions.toFixed(4) ?? 0
+                          )
+                        ) +
+                        Number(
+                          parseFloat(
+                            data.compostInTrashEmissions.toFixed(4) ?? 0
+                          )
+                        ) +
+                        Number(parseFloat(data.trashEmissions.toFixed(4) ?? 0))
+                      ).toFixed(4)
                     : "Loading..."}
                 </span>
                 <p className="text-lg text-gray-500">kg CO2e</p>
