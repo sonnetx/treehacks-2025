@@ -18,6 +18,7 @@ class ReportData:
         self.trashEmissions = trashEmissions  # Scope 2 emissions from trash in trash
         self.compostInTrashEmissions = compostInTrashEmissions  # Scope 2 emissions from compost in trash
         self.recycleInTrashEmissions = recycleInTrashEmissions  # Scope 2 emissions from recyclables in trash
+        self.recommendations = []
 
     def to_dict(self):
         return {
@@ -29,7 +30,8 @@ class ReportData:
             "compostNames": self.compostNames,
             "trashEmissions": self.trashEmissions,
             "compostInTrashEmissions": self.compostInTrashEmissions,
-            "recycleInTrashEmissions": self.recycleInTrashEmissions
+            "recycleInTrashEmissions": self.recycleInTrashEmissions,
+            "recommendations": self.recommendations
         }
 
 class Report:
