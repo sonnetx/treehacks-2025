@@ -76,30 +76,30 @@ class TrashAnalyzer:
     def get_recommendations(self, trash_items: List[Dict], compost_items: List[Dict], recycle_items: List[Dict]) -> List[str]:
         """Get recommendations based on trash items, compost items, and recycle items."""
         prompt = "Based on the items identified in the trash, compost, and recycling bins, provide recommendations to reduce waste and improve recycling rates. Include suggestions for reducing waste, composting, and recycling more effectively."
-        # print(trash_items)
-        # print(compost_items)
-        # print(recycle_items)
-        # trash_prompt = "Trash items: " + ", ".join(item for item in trash_items)
-        # compost_prompt = "Compost items: " + ", ".join(item for item in compost_items)
-        # recycle_prompt = "Recyclable items: " + ", ".join(items for item in recycle_items)
-        # items = [trash_prompt, compost_prompt, recycle_prompt]
+        print(trash_items)
+        print(compost_items)
+        print(recycle_items)
+        trash_prompt = "Trash items: " + ", ".join(item["item"] for item in trash_items)
+        compost_prompt = "Compost items: " + ", ".join(item["item"] for item in compost_items)
+        recycle_prompt = "Recyclable items: " + ", ".join(item["item"] for item in recycle_items)
+        items = [trash_prompt, compost_prompt, recycle_prompt]
 
         recommendations = []
 
-        # for item in items:
-        #     response = self.openai_client.chat.completions.create(
-        #         model="gpt-4o",
-        #         messages=[
-        #             {"role": "system", "content": prompt},
-        #             {"role": "user", "content": item}
-        #         ],
-        #         response_format={"type": "json_object"},
-        #         max_tokens=300
-        #     )
+        for item in items:
+            response = self.openai_client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": prompt},
+                    {"role": "user", "content": item}
+                ],
+                # response_format={"type": "json_object"},
+                max_tokens=300
+            )
 
-        #     recommendation = response.choices[0].message.content
-        #     recommendations.append(recommendation)
-
+            recommendation = response.choices[0].message.content
+            recommendations.append(recommendation)
+        print(recommendations)
         return recommendations
         
 
