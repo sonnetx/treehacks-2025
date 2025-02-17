@@ -1,4 +1,4 @@
-#### TreeHacks 2025: TreeTrash
+# TreeHacks 2025: TreeTrash
 https://devpost.com/software/treetrash
 
 ## Technical Overview
