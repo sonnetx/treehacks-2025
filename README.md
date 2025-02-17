@@ -1,3 +1,6 @@
+#### TreeHacks 2025: TreeTrash
+https://devpost.com/software/treetrash
+
 ## Technical Overview
 TreeTrash implements a multi-model, multi-modal AI pipeline for real-time waste analysis and environmental impact assessment. Our system architecture combines computer vision, large language models, and vector search capabilities to create a comprehensive waste management solution.
 
