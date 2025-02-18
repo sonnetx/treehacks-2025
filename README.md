@@ -1,6 +1,12 @@
 # TreeHacks 2025: TreeTrash
 https://devpost.com/software/treetrash
 
+## Inspiration
+During TreeHacks, we noticed a significant number of items being placed in the wrong waste bins, which reminded us of a broader problem with tracking and understanding waste patterns, so that they could be effectively mitigated in the future. This sparked our idea to expand upon challenge #3 on the sustainability track and leverage AI to not only identify and address this issue but also take it a step further. We wanted to go beyond simply classifying waste and analyzing the weight — we aimed to develop a program that could analyze images of trash, recycling and compost and generate a report that could provide organizations like Stanford with valuable insights into food waste patterns, enabling them to implement more effective sustainability initiatives and reduce unnecessary waste.
+
+## What It Does
+TreeTrash leverages computer vision to analyze images of a trash bin taken at regular intervals. We determine which items were misplaced and what the environmental impact of misplacing those items using a custom search pipeline. When we first notice a misplaced item, we use a display and speaker to notify the person. Then, we generate a custom report about the environmental impact of misplacing certain items, as well as specific recommendations about how to improve.
+
 ## Technical Overview
 TreeTrash implements a multi-model, multi-modal AI pipeline for real-time waste analysis and environmental impact assessment. Our system architecture combines computer vision, large language models, and vector search capabilities to create a comprehensive waste management solution.
 
